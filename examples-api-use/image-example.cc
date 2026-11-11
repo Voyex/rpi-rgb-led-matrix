@@ -70,6 +70,18 @@ static ImageVector LoadImageAndScaleImage(const char *filename,
 
   for (Magick::Image &image : result) {
     image.scale(Magick::Geometry(target_width, target_height));
+    Magick::Image mirrored_image = image;
+
+    mirrored_image.flop();
+
+    std::list<Magick::Image> image_list;
+    image_list.push_back(image);
+    image_list.push_back(mirrored_image);
+
+    Magick::Image appended_image;
+    Magick::appendImages(&appended_image, image_list.begin(), image_list.end(), false);
+
+    image = appended_image;
   }
 
   return result;
@@ -122,6 +134,15 @@ int main(int argc, char *argv[]) {
   // Initialize the RGB matrix with
   RGBMatrix::Options matrix_options;
   rgb_matrix::RuntimeOptions runtime_opt;
+
+  // These are the defaults when no command-line flags are given.
+  matrix_options.hardware_mapping = "adafruit-hat-pwm";
+  matrix_options.show_refresh_rate = true;
+  matrix_options.cols = 64;
+  matrix_options.rows = 32;
+  matrix_options.chain_length = 2;
+  matrix_options.parallel = 1;
+
   if (!rgb_matrix::ParseOptionsFromFlags(&argc, &argv,
                                          &matrix_options, &runtime_opt)) {
     return usage(argv[0]);
